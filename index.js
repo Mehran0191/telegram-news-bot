@@ -4,7 +4,7 @@ export default {
   },
   async fetch(request, env, ctx) {
     await handleNews(env);
-    return new Response("OK - Bot Active");
+    return new Response("OK - AI News Bot Active");
   },
 };
 
@@ -20,7 +20,7 @@ async function handleNews(env) {
 
   try {
     const response = await fetch(randomFeed.url, {
-      headers: { "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)" }
+      headers: { "User-Agent": "Mozilla/5.0" }
     });
     const xmlText = await response.text();
 
@@ -38,13 +38,13 @@ async function handleNews(env) {
         let link = cleanHtml(linkMatch[1]);
         let rawDesc = descMatch ? cleanHtml(descMatch[1]) : "";
 
-        if (rawDesc.length > 300) {
-          rawDesc = rawDesc.substring(0, 300) + "...";
+        if (rawDesc.length > 250) {
+          rawDesc = rawDesc.substring(0, 250) + "...";
         }
 
-        // ترجمه با متد جدید و مقاوم
-        const translatedTitle = await translateText(rawTitle);
-        const translatedDesc = rawDesc ? await translateText(rawDesc) : "";
+        // ترجمه با مدل هوش مصنوعی اختصاصی کلودفلر
+        const translatedTitle = await translateWithCF(env, rawTitle);
+        const translatedDesc = rawDesc ? await translateWithCF(env, rawDesc) : "";
 
         let message = "🔥 **خبر تازه - " + randomFeed.name + "**\n\n";
         message += "📌 **" + translatedTitle + "**\n\n";
@@ -92,34 +92,19 @@ function cleanHtml(text) {
     .trim();
 }
 
-async function translateText(text) {
+async function translateWithCF(env, text) {
   if (!text) return "";
   try {
-    const url = "https://ftapi.pythonanywhere.com/translate?sl=auto&dl=fa&text=" + encodeURIComponent(text);
-    const res = await fetch(url);
-    const data = await res.json();
-    if (data && data["destination-text"]) {
-      return data["destination-text"];
+    const response = await env.AI.run("@cf/meta/m2m100_1.2b", {
+      text: text,
+      source_lang: "english",
+      target_lang: "persian"
+    });
+    if (response && response.translated_text) {
+      return response.translated_text;
     }
   } catch (e) {
-    console.error("Translation Alt 1 Error:", e);
+    console.error("CF AI Error:", e);
   }
-
-  // Backup translate service
-  try {
-    const url2 = "https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=fa&dt=t&q=" + encodeURIComponent(text);
-    const res2 = await fetch(url2);
-    const data2 = await res2.json();
-    if (data2 && data2[0]) {
-      let out = "";
-      for (let i = 0; i < data2[0].length; i++) {
-        if (data2[0][i][0]) out += data2[0][i][0];
-      }
-      return out;
-    }
-  } catch (e) {
-    console.error("Translation Backup Error:", e);
-  }
-
   return text;
 }
