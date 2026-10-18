@@ -24,13 +24,11 @@ async function handleNews(env) {
     });
     const xmlText = await response.text();
 
-    // استخراج اولین مقاله اصلی (<item>)
     const itemMatch = xmlText.match(/<item[\s\S]*?>([\s\S]*?)<\/item>/i);
 
     if (itemMatch && itemMatch[1]) {
       const itemContent = itemMatch[1];
 
-      // استخراج عنوان، لینک و خلاصه خبر
       const titleMatch = itemContent.match(/<title>(?:<!\[CDATA\[)?([\s\S]*?)(?:\]\]>)?<\/title>/i);
       const linkMatch = itemContent.match(/<link>(?:<!\[CDATA\[)?([\s\S]*?)(?:\]\]>)?<\/link>/i);
       const descMatch = itemContent.match(/<description>(?:<!\[CDATA\[)?([\s\S]*?)(?:\]\]>)?<\/description>/i);
@@ -40,12 +38,10 @@ async function handleNews(env) {
         let link = cleanHtml(linkMatch[1]);
         let rawDesc = descMatch ? cleanHtml(descMatch[1]) : "";
 
-        // خلاصه‌سازی متن توضیحات تا ۲۵۰ کاراکتر
         if (rawDesc.length > 250) {
           rawDesc = rawDesc.substring(0, 250) + "...";
         }
 
-        // ترجمه تیتر و خلاصه خبر به فارسی
         const translatedTitle = await translateToPersian(rawTitle);
         const translatedDesc = rawDesc ? await translateToPersian(rawDesc) : "";
 
@@ -77,7 +73,6 @@ async function handleNews(env) {
   }
 }
 
-// تابع اختصاصی پاک‌سازی کاراکترهای خراب HTML و کدگذاری‌ها
 function cleanHtml(text) {
   if (!text) return "";
   return text
@@ -96,7 +91,6 @@ function cleanHtml(text) {
     .trim();
 }
 
-// تابع ترجمه روان به فارسی
 async function translateToPersian(text) {
   if (!text) return "";
   try {
@@ -104,8 +98,8 @@ async function translateToPersian(text) {
     const res = await fetch(apiUrl);
     const data = await res.json();
     if (data && data[0]) {
-      var result = "";
-      for (var i = 0; i < data[0].length; i++) {
+      let result = "";
+      for (let i = 0; i < data[0].length; i++) {
         if (data[0][i][0]) {
           result += data[0][i][0];
         }
