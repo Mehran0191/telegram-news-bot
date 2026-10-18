@@ -42,9 +42,9 @@ async function handleNews(env) {
           rawDesc = rawDesc.substring(0, 250) + "...";
         }
 
-        // ترجمه با مدل هوش مصنوعی اختصاصی کلودفلر
-        const translatedTitle = await translateWithCF(env, rawTitle);
-        const translatedDesc = rawDesc ? await translateWithCF(env, rawDesc) : "";
+        // ترجمه فوق‌العاده روان و دقیق با مدل Llama 3 کلودفلر
+        const translatedTitle = await translateWithLlama(env, rawTitle);
+        const translatedDesc = rawDesc ? await translateWithLlama(env, rawDesc) : "";
 
         let message = "🔥 **خبر تازه - " + randomFeed.name + "**\n\n";
         message += "📌 **" + translatedTitle + "**\n\n";
@@ -92,19 +92,26 @@ function cleanHtml(text) {
     .trim();
 }
 
-async function translateWithCF(env, text) {
+async function translateWithLlama(env, text) {
   if (!text) return "";
   try {
-    const response = await env.AI.run("@cf/meta/m2m100_1.2b", {
-      text: text,
-      source_lang: "english",
-      target_lang: "persian"
+    const aiResponse = await env.AI.run("@cf/meta/llama-3-8b-instruct", {
+      messages: [
+        { 
+          role: "system", 
+          content: "You are a professional translator. Translate the given English text into fluent, natural Persian. Output ONLY the Persian translation and nothing else." 
+        },
+        { 
+          role: "user", 
+          content: text 
+        }
+      ]
     });
-    if (response && response.translated_text) {
-      return response.translated_text;
+    if (aiResponse && aiResponse.response) {
+      return aiResponse.response.trim();
     }
   } catch (e) {
-    console.error("CF AI Error:", e);
+    console.error("AI Translation Error:", e);
   }
   return text;
 }
