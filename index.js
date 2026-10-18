@@ -1,7 +1,9 @@
+Mehran🌱:
 export default { async scheduled(event, env, ctx) { ctx.waitUntil(handleNews(env)); }, async fetch(request, env, ctx) { await handleNews(env); return new Response("ربات اخبار خبر مبر با موفقیت اجرا شد!"); }, };
-async function handleNews(env) { // لیست منابع معتبر برای هوش مصنوعی، سئو، گوگل و برنامه‌نویسی const rssFeeds = [ { name: "هوش مصنوعی و فناوری", url: "https://techcrunch.com/category/artificial-intelligence/feed/" }, { name: "سئو و بهینه‌سازی", url: "https://www.searchenginejournal.com/feed/" }, { name: "توسعه‌دهندگان گوگل", url: "https://feeds.feedburner.com/GoogleDevelopersBlog" }, { name: "برنامه‌نویسی و وب", url: "https://dev.to/feed" } ];
-// انتخاب تصادفی یک منبع در هر بار اجرا برای ارسال خبر متنوع const randomFeed = rssFeeds[Math.floor(Math.random() * rssFeeds.length)];
+async function handleNews(env) { const rssFeeds = [ { name: "هوش مصنوعی و فناوری", url: "https://techcrunch.com/category/artificial-intelligence/feed/" }, { name: "سئو و بهینه‌سازی", url: "https://www.searchenginejournal.com/feed/" }, { name: "توسعه‌دهندگان گوگل", url: "https://feeds.feedburner.com/GoogleDevelopersBlog" }, { name: "برنامه‌نویسی و وب", url: "https://dev.to/feed" } ];
+const randomFeed = rssFeeds[Math.floor(Math.random() * rssFeeds.length)];
 try { const response = await fetch(randomFeed.url); const xmlText = await response.text();
+
 const titleMatch = xmlText.match(/<title><!\[CDATA\[(.*?)\]\]><\/title>|<title>(.*?)<\/title>/);
 const linkMatch = xmlText.match(/<link>(.*?)<\/link>/);
 
@@ -15,8 +17,7 @@ if (titleMatch && linkMatch) {
   const chatId = "@Avishannews";
 
   const url =
- https://api.telegram.org/bot${botToken}/sendMessage;
-
+ https://api.telegram.org/bot${botToken}/sendMessage;
   
   await fetch(url, {
     method: "POST",
