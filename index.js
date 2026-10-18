@@ -1,5 +1,5 @@
 Mehran🌱:
-export default { async scheduled(event, env, ctx) { ctx.waitUntil(handleNews(env)); }, async fetch(request, env, ctx) { await handleNews(env); return new Response("ربات اخبار خبر مبر با موفقیت اجرا شد!"); }, };
+export default { async scheduled(event, env, ctx) { ctx.waitUntil(handleNews(env)); }, async fetch(request, env, ctx) { await handleNews(env); return new Response("OK"); }, };
 async function handleNews(env) { const rssFeeds = [ { name: "هوش مصنوعی و فناوری", url: "https://techcrunch.com/category/artificial-intelligence/feed/" }, { name: "سئو و بهینه‌سازی", url: "https://www.searchenginejournal.com/feed/" }, { name: "توسعه‌دهندگان گوگل", url: "https://feeds.feedburner.com/GoogleDevelopersBlog" }, { name: "برنامه‌نویسی و وب", url: "https://dev.to/feed" } ];
 const randomFeed = rssFeeds[Math.floor(Math.random() * rssFeeds.length)];
 try { const response = await fetch(randomFeed.url); const xmlText = await response.text();
@@ -16,8 +16,7 @@ if (titleMatch && linkMatch) {
   const botToken = "8577888214:AAGOyRw5m60EdKCrI9qK-PMwN7uy0ctXz7Q";
   const chatId = "@Avishannews";
 
-  const url =
- https://api.telegram.org/bot${botToken}/sendMessage;
+  const url = "https://api.telegram.org/bot" + botToken + "/sendMessage";
   
   await fetch(url, {
     method: "POST",
@@ -29,4 +28,4 @@ if (titleMatch && linkMatch) {
     }),
   });
 }
-} catch (error) { console.error("خطا در دریافت اخبار:", error); } }
+} catch (error) { console.error("Error:", error); } }
