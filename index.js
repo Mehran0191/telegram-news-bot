@@ -1,25 +1,23 @@
-export default { async scheduled(event, env, ctx) { ctx.waitUntil(handleNews(env)); }, async fetch(request, env, ctx) { await handleNews(env); return new Response("OK - Translated Bot Active"); }, };
+export default { async scheduled(event, env, ctx) { ctx.waitUntil(handleNews(env)); }, async fetch(request, env, ctx) { await handleNews(env); return new Response("OK - Bot Active"); }, };
 async function handleNews(env) { const rssFeeds = [ { name: "هوش مصنوعی و فناوری", url: "https://techcrunch.com/category/artificial-intelligence/feed/" }, { name: "سئو و بهینه‌سازی", url: "https://www.searchenginejournal.com/feed/" }, { name: "توسعه‌دهندگان گوگل", url: "https://feeds.feedburner.com/GoogleDevelopersBlog" }, { name: "برنامه‌نویسی و وب", url: "https://dev.to/feed" } ];
 const randomFeed = rssFeeds[Math.floor(Math.random() * rssFeeds.length)];
-try { const response = await fetch(randomFeed.url, { headers: { "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)" } }); const xmlText = await response.text();
-// دریافت اولین عنوان و لینک معتبر خبر
-const itemMatch = xmlText.match(/<item>[\s\S]*?<title>(?:<!\[CDATA\[)?([\s\S]*?)(?:\]\]>)?<\/title>[\s\S]*?<link>([\s\S]*?)<\/link>/i);
+try { const response = await fetch(randomFeed.url, { headers: { "User-Agent": "Mozilla/5.0" } }); const xmlText = await response.text();
+const titleMatch = xmlText.match(/<title>(.*?)<\/title>/);
+const linkMatch = xmlText.match(/<link>(.*?)<\/link>/);
 
-if (itemMatch && itemMatch[1] && itemMatch[2]) {
-  let rawTitle = itemMatch[1].replace(/<\/?[^>]+(>|$)/g, "").trim();
-  let link = itemMatch[2].trim();
+if (titleMatch && linkMatch) {
+  let rawTitle = titleMatch[1].replace("<![CDATA[", "").replace("]]>", "").trim();
+  let link = linkMatch[1].trim();
 
-  // ترجمه تیتر خبر به فارسی
+  // ترجمه تیتر به فارسی
   const translatedTitle = await translateToPersian(rawTitle);
 
-  const message = `🔥 **خبر تازه - ${randomFeed.name}**\n\n📌 **${translatedTitle}**\n\n🔗 **مطالعه کامل خبر:**\n${link}`;
+  const message = "🔥 **خبر تازه - " + randomFeed.name + "**\n\n📌 **" + translatedTitle + "**\n\n🔗 **مطالعه کامل خبر:**\n" + link;
 
   const botToken = "8577888214:AAGOyRw5m60EdKCrI9qK-PMwN7uy0ctXz7Q";
   const chatId = "@Avishannews";
 
-  const url = "https://api.telegram.org/bot" + botToken + "/sendMessage";
-  
-  await fetch(url, {
+  await fetch("https://api.telegram.org/bot" + botToken + "/sendMessage", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
@@ -30,4 +28,4 @@ if (itemMatch && itemMatch[1] && itemMatch[2]) {
   });
 }
 } catch (error) { console.error("Error:", error); } }
-async function translateToPersian(text) { try { const url = https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=fa&dt=t&q=${encodeURIComponent(text)}; const res = await fetch(url); const data = await res.json(); if (data && data[0]) { return data[0].map(item => item[0]).join(''); } } catch (e) { console.error("Translation error:", e); } return text; }
+async function translateToPersian(text) { try { const apiUrl = "https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=fa&dt=t&q=" + encodeURIComponent(text); const res = await fetch(apiUrl); const data = await res.json(); if (data && data[0]) { return data[0].map(function(item) { return item[0]; }).join(''); } } catch (e) { console.error("Translation error:", e); } return text; }
