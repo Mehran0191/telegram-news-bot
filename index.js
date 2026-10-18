@@ -49,5 +49,5 @@ if (itemMatch && itemMatch[1]) {
 } catch (error) { console.error("Error:", error); } }
 function cleanTextSimple(text) { if (!text) return ""; let cleaned = text .split("<![CDATA[").join("")
 .split("]]>").join("") .split("’").join("'") .split("‘").join("'") .split("“").join('"') .split("”").join('"') .split("'").join("'") .split(""").join('"') .split("&").join("&") .split("<").join("<") .split(">").join(">");
-// پاک کردن تگ‌های HTML بدون ساختار پیچیده Regex let result = ""; let insideTag = false; for (let i = 0; i < cleaned.length; i++) { if (cleaned[i] === "<") { insideTag = true; } else if (cleaned[i] === ">") { insideTag = false; } else if (!insideTag) { result += cleaned[i]; } } return result.trim(); }
+let result = ""; let insideTag = false; for (let i = 0; i < cleaned.length; i++) { if (cleaned[i] === "<") { insideTag = true; } else if (cleaned[i] === ">") { insideTag = false; } else if (!insideTag) { result += cleaned[i]; } } return result.trim(); }
 async function translateToPersian(text) { if (!text) return ""; try { const apiUrl = "https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=fa&dt=t&q=" + encodeURIComponent(text); const res = await fetch(apiUrl); const data = await res.json(); if (data && data[0]) { return data[0].map(item => item[0]).join(""); } } catch (e) { console.error("Translation Error:", e); } return text; }
