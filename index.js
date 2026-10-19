@@ -1,9 +1,3 @@
-GEMINI_API_KEY
-```[cite: 7]
-
-**گام دوم:** کد زیر رو جایگزین `index.js` کن. توی این نسخه، هم نام متغیر اصلاح شده و هم مدل جمنای روی نسخه استاندارد و پایدار تنظیم شده تا هیچ‌وقت خطا نده:
-
-```javascript
 export default {
   async scheduled(event, env, ctx) {
     ctx.waitUntil(handleNews(env));
@@ -42,7 +36,6 @@ async function handleNews(env) {
         let rawTitle = cleanHtml(titleMatch[1]);
         let link = cleanHtml(linkMatch[1]);
 
-        // ترجمه روان با جمنای
         const translatedTitle = await translateWithGemini(env, rawTitle);
 
         let message = "🔥 خبر تازه - " + randomFeed.name + "\n\n";
