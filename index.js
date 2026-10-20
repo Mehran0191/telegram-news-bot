@@ -4,19 +4,17 @@ export default {
   },
   async fetch(request, env, ctx) {
     await handleNews(env);
-    return new Response("OK - Clean Post Format Active");
+    return new Response("OK - Clean Tech News Active");
   },
 };
 
 async function handleNews(env) {
+  // فقط منابع تخصصی فناوری، سئو و هوش مصنوعی (حذف دیجی‌کالا مگ)
   const rssFeeds = [
     { name: "زومیت", url: "https://www.zoomit.ir/feed/" },
     { name: "دیجیاتو", url: "https://digiato.com/feed" },
-    { name: "دیجی‌کالا مگ", url: "https://www.digikala.com/mag/feed/" },
     { name: "زومجی", url: "https://www.zoomg.ir/feed/" },
-    { name: "تریبون", url: "https://www.triboon.net/blog/feed/" },
-    { name: "تک‌کرانچ", url: "https://techcrunch.com/feed/" },
-    { name: "د ورج", url: "https://www.theverge.com/rss/index.xml" }
+    { name: "تریبون", url: "https://www.triboon.net/blog/feed/" }
   ];
 
   const randomFeed = rssFeeds[Math.floor(Math.random() * rssFeeds.length)];
@@ -48,7 +46,7 @@ async function handleNews(env) {
           desc = desc.substring(0, 250) + "...";
         }
 
-        // ساخت پیام دقیقاً طبق فرمت دلخواه شما با HTML
+        // فرمت تمیز طبق خواسته شما بدون نام سایت و بدون ستاره
         let message = "🔥 <b>خبر تازه</b>\n";
         message += "📌 <b>" + title + "</b>\n\n";
 
