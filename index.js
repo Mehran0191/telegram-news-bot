@@ -47,7 +47,8 @@ async function handleNews(env) {
         }
         message += "@AvishanNews";
 
-        const botToken = "8577888214:AAGOyRw5m60EdKCrI9qK-PMwN7uy0ctXz7Q";
+        // توکن جدید ربات تلگرام
+        const botToken = "8615663585:AAEDIgdeqi3h14snlAlgzS_nCmaEI2ntc8w";
         const chatId = "@Avishannews";
 
         await fetch("https://api.telegram.org/bot" + botToken + "/sendMessage", {
