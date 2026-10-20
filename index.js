@@ -4,24 +4,32 @@ export default {
   },
   async fetch(request, env, ctx) {
     await handleNews(env);
-    return new Response("OK - Bot Executed Successfully");
+    return new Response("OK - Mixed News Bot Active");
   },
 };
 
 async function handleNews(env) {
-  // منابع معتبر، فعال و پربازدید تکنولوژی و سئو
+  // منابع ترکیبی (با وزن بیشتر روی منابع ایرانی)
   const rssFeeds = [
-    { name: "فناوری و هوش مصنوعی (TechCrunch)", url: "https://techcrunch.com/feed/" },
-    { name: "اخبار داغ تکنولوژی (The Verge)", url: "https://www.theverge.com/rss/index.xml" },
-    { name: "سئو و بهینه‌سازی (Search Engine Land)", url: "https://searchengineland.com/feed" },
-    { name: "نرم‌افزار و برنامه‌نویسی (Ars Technica)", url: "https://feeds.arstechnica.com/arstechnica/index" }
+    // منابع ایرانی (سهم بیشتر)
+    { name: "زومیت", url: "https://www.zoomit.ir/feed/" },
+    { name: "دیجیاتو", url: "https://digiato.com/feed" },
+    { name: "دیجی‌کالا مگ", url: "https://www.digikala.com/mag/feed/" },
+    { name: "زومجی (گیم و فناوری)", url: "https://www.zoomg.ir/feed/" },
+    { name: "تریبون (سئو و دیجیتال مارکتینگ)", url: "https://www.triboon.net/blog/feed/" },
+    
+    // منابع خارجی (برای تنوع و پوشش اخبار جهانی)
+    { name: "تک‌کرانچ (خارجی)", url: "https://techcrunch.com/feed/" },
+    { name: "د ورج (خارجی)", url: "https://www.theverge.com/rss/index.xml" }
   ];
 
   const randomFeed = rssFeeds[Math.floor(Math.random() * rssFeeds.length)];
 
   try {
     const response = await fetch(randomFeed.url, {
-      headers: { "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)" }
+      headers: { 
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36" 
+      }
     });
     const xmlText = await response.text();
 
@@ -34,20 +42,17 @@ async function handleNews(env) {
       const linkMatch = itemContent.match(/<link(?:[\s\S]*?href=["']([\s\S]*?)["'])?(?:<!\[CDATA\[)?([\s\S]*?)(?:\]\]>)?<\/link>/i);
 
       if (titleMatch) {
-        let rawTitle = cleanHtml(titleMatch[1]);
+        let title = cleanHtml(titleMatch[1]);
         let link = linkMatch ? (linkMatch[1] || cleanHtml(linkMatch[2])) : "";
 
-        // ترجمه دقیق با Gemini API
-        let translatedTitle = await translateWithGemini(env, rawTitle);
-
         let message = "🔥 **خبر تازه - " + randomFeed.name + "**\n\n";
-        message += "📌 **" + translatedTitle + "**\n\n";
+        message += "📌 **" + title + "**\n\n";
         if (link) {
-          message += "🔗 **لینک مطالعه کامل:**\n" + link + "\n\n";
+          message += "🔗 **مطالعه کامل خبر:**\n" + link + "\n\n";
         }
         message += "@AvishanNews";
 
-        // توکن جدید ربات تلگرام
+        // توکن ربات تلگرام
         const botToken = "8615663585:AAEDIgdeqi3h14snlAlgzS_nCmaEI2ntc8w";
         const chatId = "@Avishannews";
 
@@ -62,14 +67,15 @@ async function handleNews(env) {
       }
     }
   } catch (error) {
-    console.error("Main Execution Error:", error);
+    console.error("Error fetching news:", error);
   }
 }
 
 function cleanHtml(text) {
   if (!text) return "";
   return text
-    .replace(/<!\[CDATA\[/g, "") .replace(/\]\]>/g, "")
+    .replace(/<!\[CDATA\[/g, "")
+    .replace(/\]\]>/g, "")
     .replace(/&#8217;/g, "'")
     .replace(/&#8216;/g, "'")
     .replace(/&#8220;/g, '"')
@@ -81,29 +87,4 @@ function cleanHtml(text) {
     .replace(/&gt;/g, ">")
     .replace(/<\/?[^>]+(>|$)/g, "")
     .trim();
-}
-
-async function translateWithGemini(env, text) {
-  if (!text || !env.GEMINI_API_KEY) return text;
-  
-  try {
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${env.GEMINI_API_KEY}`;
-    const response = await fetch(url, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        contents: [{
-          parts: [{ text: `Translate the following tech news headline into smooth, natural Persian. Return ONLY the translation:\n\n${text}` }]
-        }]
-      })
-    });
-    
-    const data = await response.json();
-    if (data && data.candidates && data.candidates[0].content.parts[0].text) {
-      return data.candidates[0].content.parts[0].text.trim();
-    }
-  } catch (e) {
-    console.error("Gemini Error:", e);
-  }
-  return text;
 }
