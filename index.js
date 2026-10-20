@@ -4,23 +4,19 @@ export default {
   },
   async fetch(request, env, ctx) {
     await handleNews(env);
-    return new Response("OK - Mixed News Bot Active");
+    return new Response("OK - Clean Post Format Active");
   },
 };
 
 async function handleNews(env) {
-  // منابع ترکیبی (با وزن بیشتر روی منابع ایرانی)
   const rssFeeds = [
-    // منابع ایرانی (سهم بیشتر)
     { name: "زومیت", url: "https://www.zoomit.ir/feed/" },
     { name: "دیجیاتو", url: "https://digiato.com/feed" },
     { name: "دیجی‌کالا مگ", url: "https://www.digikala.com/mag/feed/" },
-    { name: "زومجی (گیم و فناوری)", url: "https://www.zoomg.ir/feed/" },
-    { name: "تریبون (سئو و دیجیتال مارکتینگ)", url: "https://www.triboon.net/blog/feed/" },
-    
-    // منابع خارجی (برای تنوع و پوشش اخبار جهانی)
-    { name: "تک‌کرانچ (خارجی)", url: "https://techcrunch.com/feed/" },
-    { name: "د ورج (خارجی)", url: "https://www.theverge.com/rss/index.xml" }
+    { name: "زومجی", url: "https://www.zoomg.ir/feed/" },
+    { name: "تریبون", url: "https://www.triboon.net/blog/feed/" },
+    { name: "تک‌کرانچ", url: "https://techcrunch.com/feed/" },
+    { name: "د ورج", url: "https://www.theverge.com/rss/index.xml" }
   ];
 
   const randomFeed = rssFeeds[Math.floor(Math.random() * rssFeeds.length)];
@@ -40,19 +36,32 @@ async function handleNews(env) {
 
       const titleMatch = itemContent.match(/<title>(?:<!\[CDATA\[)?([\s\S]*?)(?:\]\]>)?<\/title>/i);
       const linkMatch = itemContent.match(/<link(?:[\s\S]*?href=["']([\s\S]*?)["'])?(?:<!\[CDATA\[)?([\s\S]*?)(?:\]\]>)?<\/link>/i);
+      const descMatch = itemContent.match(/<description>(?:<!\[CDATA\[)?([\s\S]*?)(?:\]\]>)?<\/description>/i) || 
+                        itemContent.match(/<summary>(?:<!\[CDATA\[)?([\s\S]*?)(?:\]\]>)?<\/summary>/i);
 
       if (titleMatch) {
         let title = cleanHtml(titleMatch[1]);
         let link = linkMatch ? (linkMatch[1] || cleanHtml(linkMatch[2])) : "";
+        let desc = descMatch ? cleanHtml(descMatch[1]) : "";
 
-        let message = "🔥 **خبر تازه - " + randomFeed.name + "**\n\n";
-        message += "📌 **" + title + "**\n\n";
-        if (link) {
-          message += "🔗 **مطالعه کامل خبر:**\n" + link + "\n\n";
+        if (desc.length > 250) {
+          desc = desc.substring(0, 250) + "...";
         }
+
+        // ساخت پیام دقیقاً طبق فرمت دلخواه شما با HTML
+        let message = "🔥 <b>خبر تازه</b>\n";
+        message += "📌 <b>" + title + "</b>\n\n";
+
+        if (desc) {
+          message += desc + "\n\n";
+        }
+
+        if (link) {
+          message += "🔗 <b>مطالعه کامل خبر:</b>\n<blockquote>" + link + "</blockquote>\n\n";
+        }
+
         message += "@AvishanNews";
 
-        // توکن ربات تلگرام
         const botToken = "8615663585:AAEDIgdeqi3h14snlAlgzS_nCmaEI2ntc8w";
         const chatId = "@Avishannews";
 
@@ -62,6 +71,8 @@ async function handleNews(env) {
           body: JSON.stringify({
             chat_id: chatId,
             text: message,
+            parse_mode: "HTML",
+            disable_web_page_preview: false
           }),
         });
       }
