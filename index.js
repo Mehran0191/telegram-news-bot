@@ -4,43 +4,47 @@ export default {
   },
   async fetch(request, env, ctx) {
     await handleNews(env);
-    return new Response("OK - Gemini News Bot Active");
+    return new Response("OK - Bot Executed Successfully");
   },
 };
 
 async function handleNews(env) {
+  // منابع معتبر، فعال و پربازدید تکنولوژی و سئو
   const rssFeeds = [
-    { name: "هوش مصنوعی و فناوری", url: "https://techcrunch.com/category/artificial-intelligence/feed/" },
-    { name: "سئو و بهینه‌سازی", url: "https://www.searchenginejournal.com/feed/" },
-    { name: "توسعه‌دهندگان گوگل", url: "https://feeds.feedburner.com/GoogleDevelopersBlog" },
-    { name: "برنامه‌نویسی و وب", url: "https://dev.to/feed" }
+    { name: "فناوری و هوش مصنوعی (TechCrunch)", url: "https://techcrunch.com/feed/" },
+    { name: "اخبار داغ تکنولوژی (The Verge)", url: "https://www.theverge.com/rss/index.xml" },
+    { name: "سئو و بهینه‌سازی (Search Engine Land)", url: "https://searchengineland.com/feed" },
+    { name: "نرم‌افزار و برنامه‌نویسی (Ars Technica)", url: "https://feeds.arstechnica.com/arstechnica/index" }
   ];
 
   const randomFeed = rssFeeds[Math.floor(Math.random() * rssFeeds.length)];
 
   try {
     const response = await fetch(randomFeed.url, {
-      headers: { "User-Agent": "Mozilla/5.0" }
+      headers: { "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)" }
     });
     const xmlText = await response.text();
 
-    const itemMatch = xmlText.match(/<item[\s\S]*?>([\s\S]*?)<\/item>/i);
+    const itemMatch = xmlText.match(/<item[\s\S]*?>([\s\S]*?)<\/item>/i) || xmlText.match(/<entry[\s\S]*?>([\s\S]*?)<\/entry>/i);
 
     if (itemMatch && itemMatch[1]) {
       const itemContent = itemMatch[1];
 
       const titleMatch = itemContent.match(/<title>(?:<!\[CDATA\[)?([\s\S]*?)(?:\]\]>)?<\/title>/i);
-      const linkMatch = itemContent.match(/<link>(?:<!\[CDATA\[)?([\s\S]*?)(?:\]\]>)?<\/link>/i);
+      const linkMatch = itemContent.match(/<link(?:[\s\S]*?href=["']([\s\S]*?)["'])?(?:<!\[CDATA\[)?([\s\S]*?)(?:\]\]>)?<\/link>/i);
 
-      if (titleMatch && linkMatch) {
+      if (titleMatch) {
         let rawTitle = cleanHtml(titleMatch[1]);
-        let link = cleanHtml(linkMatch[1]);
+        let link = linkMatch ? (linkMatch[1] || cleanHtml(linkMatch[2])) : "";
 
-        const translatedTitle = await translateWithGemini(env, rawTitle);
+        // ترجمه دقیق با Gemini API
+        let translatedTitle = await translateWithGemini(env, rawTitle);
 
-        let message = "🔥 خبر تازه - " + randomFeed.name + "\n\n";
-        message += "📌 " + translatedTitle + "\n\n";
-        message += "🔗 لینک منبع:\n" + link + "\n\n";
+        let message = "🔥 **خبر تازه - " + randomFeed.name + "**\n\n";
+        message += "📌 **" + translatedTitle + "**\n\n";
+        if (link) {
+          message += "🔗 **لینک مطالعه کامل:**\n" + link + "\n\n";
+        }
         message += "@AvishanNews";
 
         const botToken = "8577888214:AAGOyRw5m60EdKCrI9qK-PMwN7uy0ctXz7Q";
@@ -57,7 +61,7 @@ async function handleNews(env) {
       }
     }
   } catch (error) {
-    console.error("Error:", error);
+    console.error("Main Execution Error:", error);
   }
 }
 
@@ -80,6 +84,7 @@ function cleanHtml(text) {
 
 async function translateWithGemini(env, text) {
   if (!text || !env.GEMINI_API_KEY) return text;
+  
   try {
     const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${env.GEMINI_API_KEY}`;
     const response = await fetch(url, {
@@ -87,16 +92,17 @@ async function translateWithGemini(env, text) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         contents: [{
-          parts: [{ text: `Translate the following English text into fluent, natural Persian. Output ONLY the Persian translation and nothing else:\n\n${text}` }]
+          parts: [{ text: `Translate the following tech news headline into smooth, natural Persian. Return ONLY the translation:\n\n${text}` }]
         }]
       })
     });
+    
     const data = await response.json();
     if (data && data.candidates && data.candidates[0].content.parts[0].text) {
       return data.candidates[0].content.parts[0].text.trim();
     }
   } catch (e) {
-    console.error("Gemini Translation Error:", e);
+    console.error("Gemini Error:", e);
   }
   return text;
 }
